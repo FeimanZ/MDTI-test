@@ -1,5 +1,11 @@
 # MDTI 职场人格测试
 
+<p align="center">
+  <a href="https://mdti.pages.dev" target="_blank">
+    <img src="https://img.shields.io/badge/🚀_立即体验-mdti.pages.dev-f97316?style=for-the-badge&labelColor=1a2744" alt="立即体验"/>
+  </a>
+</p>
+
 > **Ma Dan Type Indicator** — MBTI测心理，SBTI测精神，MDTI测你在职场被麻了多少次。
 
 <p align="center">
@@ -7,12 +13,6 @@
   <img src="https://img.shields.io/badge/题目-20道-3b82f6?style=for-the-badge&labelColor=1a2744" alt="20题"/>
   <img src="https://img.shields.io/badge/人格类型-24种-10b981?style=for-the-badge&labelColor=1a2744" alt="24种人格"/>
   <img src="https://img.shields.io/badge/纯娱乐-非心理学诊断-94a3b8?style=for-the-badge&labelColor=1a2744" alt="娱乐向"/>
-</p>
-
-<p align="center">
-  <a href="https://mdti.pages.dev" target="_blank">
-    <img src="https://img.shields.io/badge/🚀_立即体验-mdti.pages.dev-f97316?style=for-the-badge&labelColor=1a2744" alt="立即体验"/>
-  </a>
 </p>
 
 ---
