@@ -1,0 +1,1237 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+<title>MDTI 职场人格测试</title>
+<meta name="description" content="MBTI测心理，SBTI测精神，MDTI测你在职场被麻了多少次。20道题，每次2题，翻完看结果。"/>
+<meta name="theme-color" content="#1a2744"/>
+<style>
+:root{
+  --bg:#f4f6fb;--panel:#fff;--text:#1e293b;--muted:#64748b;
+  --line:#e2e8f0;--soft:#f1f5f9;
+  --accent:#f97316;--accent2:#ea580c;
+  --navy:#1a2744;--navy2:#243352;
+  --r:18px;
+}
+@media(prefers-color-scheme:dark){
+  :root{--bg:#0f172a;--panel:#1e293b;--text:#f1f5f9;--muted:#94a3b8;
+    --line:#334155;--soft:#1e293b;--navy:#0c1428;--navy2:#1a2744;}
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;background:var(--bg);color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;}
+button{border:0;cursor:pointer;font:inherit;background:none;transition:opacity .15s,transform .12s;}
+button:active{transform:scale(.97);opacity:.85;}
+button:disabled{opacity:.4;pointer-events:none;}
+
+/* ── 页面容器 ── */
+.page{display:none;min-height:100dvh;}
+.page.on{display:flex;flex-direction:column;}
+
+/* ══ 首页 ══ */
+#pg-home{
+  background:linear-gradient(160deg,var(--navy) 0%,var(--navy2) 55%,#0f172a 100%);
+  color:#fff;align-items:stretch;justify-content:space-between;
+  padding:env(safe-area-inset-top,20px) 0 0;
+}
+.home-body{flex:1;display:flex;flex-direction:column;justify-content:center;padding:32px 28px 20px;}
+.home-eyebrow{
+  display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;
+  background:rgba(249,115,22,.18);border:1px solid rgba(249,115,22,.35);
+  color:#fed7aa;border-radius:999px;padding:6px 14px;margin-bottom:20px;width:fit-content;
+}
+.home-h1{font-size:clamp(36px,10vw,58px);font-weight:900;line-height:1.08;letter-spacing:-.03em;margin-bottom:8px;}
+.home-h1 span{color:var(--accent);}
+.home-sub{font-size:15px;color:#94a3b8;line-height:1.8;margin-bottom:24px;}
+.home-chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:32px;}
+.chip{font-size:12px;color:#94a3b8;background:rgba(255,255,255,.07);
+  border:1px solid rgba(255,255,255,.1);border-radius:999px;padding:6px 12px;}
+.chip strong{color:var(--accent);}
+.home-cta{
+  width:100%;padding:17px;border-radius:14px;font-size:17px;font-weight:800;
+  background:var(--accent);color:#fff;box-shadow:0 8px 28px rgba(249,115,22,.35);
+  margin-bottom:12px;
+}
+.home-sec{
+  width:100%;padding:14px;border-radius:14px;font-size:15px;font-weight:700;
+  border:1.5px solid rgba(249,115,22,.5);color:#fed7aa;
+}
+.home-footer{
+  padding:20px 28px calc(20px + env(safe-area-inset-bottom,0));
+  font-size:12px;color:rgba(255,255,255,.3);text-align:center;
+}
+
+/* ══ 进度栏（测试中固定顶部）══ */
+.prog-bar-wrap{
+  position:fixed;top:0;left:0;right:0;z-index:200;
+  padding:env(safe-area-inset-top,0) 0 0;
+  background:rgba(248,250,252,.96);backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--line);
+}
+@media(prefers-color-scheme:dark){.prog-bar-wrap{background:rgba(15,23,42,.96);}}
+.prog-bar-inner{
+  max-width:600px;margin:0 auto;
+  display:flex;align-items:center;gap:12px;
+  padding:10px 16px 11px;
+}
+.prog-back{
+  width:36px;height:36px;border-radius:10px;
+  border:1px solid var(--line);background:var(--soft);
+  font-size:18px;color:var(--text);display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;
+}
+.prog-track{flex:1;height:7px;background:var(--soft);border-radius:999px;overflow:hidden;}
+.prog-fill{height:100%;border-radius:inherit;background:linear-gradient(90deg,var(--accent),var(--accent2));
+  transition:width .3s ease;width:0%;}
+.prog-label{font-size:12px;color:var(--muted);white-space:nowrap;font-weight:600;}
+
+/* ══ 测试页 ══ */
+#pg-test{padding-top:calc(env(safe-area-inset-top,0px) + 58px);}
+.test-scroll{flex:1;overflow-y:auto;padding:16px 16px 24px;max-width:600px;margin:0 auto;width:100%;}
+
+/* 翻页动画 */
+.q-page{display:none;animation:fadeUp .22s ease both;}
+.q-page.on{display:block;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:none;}}
+
+.q-card{
+  background:var(--panel);border:1px solid var(--line);border-radius:var(--r);
+  padding:20px;margin-bottom:14px;
+  box-shadow:0 4px 16px rgba(26,39,68,.06);
+}
+.q-header{display:flex;align-items:center;gap:9px;margin-bottom:14px;}
+.q-num{
+  width:30px;height:30px;border-radius:9px;
+  background:linear-gradient(135deg,var(--navy),var(--navy2));
+  color:#fff;font-weight:800;font-size:13px;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.q-dim{font-size:12px;color:var(--muted);font-weight:600;}
+.q-text{font-size:16px;line-height:1.65;font-weight:600;margin-bottom:14px;color:var(--text);}
+.opts{display:grid;gap:9px;}
+.opt{
+  display:flex;align-items:flex-start;gap:11px;
+  padding:14px;border-radius:13px;
+  border:1.5px solid var(--line);background:var(--panel);
+  cursor:pointer;text-align:left;width:100%;
+  transition:border-color .15s,background .15s,transform .12s;
+}
+.opt:active{transform:scale(.985);}
+.opt.chosen{border-color:var(--accent);background:#fff7ed;}
+@media(prefers-color-scheme:dark){.opt.chosen{background:#431407;}}
+.opt-key{
+  width:26px;height:26px;border-radius:8px;border:1.5px solid var(--line);
+  font-size:12px;font-weight:800;color:var(--muted);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;
+  transition:background .15s,border-color .15s,color .15s;
+}
+.opt.chosen .opt-key{background:var(--accent);border-color:var(--accent);color:#fff;}
+.opt-text{font-size:14px;line-height:1.6;color:var(--text);}
+
+/* 页底导航 */
+.page-nav{
+  max-width:600px;margin:0 auto;width:100%;
+  display:flex;justify-content:space-between;align-items:center;gap:12px;
+  padding:0 16px calc(16px + env(safe-area-inset-bottom,0));
+}
+.nav-hint{font-size:13px;color:var(--muted);}
+.btn-next{
+  padding:13px 24px;border-radius:13px;font-weight:800;font-size:15px;
+  background:var(--accent);color:#fff;box-shadow:0 6px 20px rgba(249,115,22,.3);
+  white-space:nowrap;
+}
+.btn-submit{
+  padding:13px 24px;border-radius:13px;font-weight:800;font-size:15px;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;
+  box-shadow:0 6px 20px rgba(249,115,22,.35);white-space:nowrap;
+}
+
+/* ══ 结果页 ══ */
+#pg-result{overflow-y:auto;padding:calc(env(safe-area-inset-top,16px) + 8px) 0 calc(env(safe-area-inset-bottom,0px)+20px);}
+.result-inner{max-width:600px;margin:0 auto;padding:0 16px;display:grid;gap:14px;}
+
+/* 主卡 */
+.res-hero{
+  background:linear-gradient(135deg,var(--navy) 0%,var(--navy2) 100%);
+  border-radius:var(--r);padding:26px 24px;color:#fff;
+  position:relative;overflow:hidden;
+}
+.res-hero::before{
+  content:'';position:absolute;right:-50px;top:-50px;
+  width:200px;height:200px;border-radius:50%;
+  background:radial-gradient(circle,rgba(249,115,22,.22),transparent 70%);
+}
+.res-kicker{font-size:11px;letter-spacing:.1em;color:#fed7aa;text-transform:uppercase;margin-bottom:8px;}
+.res-code{font-size:clamp(52px,14vw,80px);font-weight:900;line-height:1;letter-spacing:-.02em;color:#fff;}
+.res-name{font-size:22px;font-weight:800;color:var(--accent);margin-top:4px;}
+.res-pct{
+  display:inline-flex;align-items:center;gap:6px;margin-top:12px;
+  background:rgba(249,115,22,.22);border:1px solid rgba(249,115,22,.4);
+  border-radius:999px;padding:8px 16px;font-weight:700;font-size:14px;color:#fed7aa;
+}
+.res-sub{margin-top:12px;font-size:13px;color:#94a3b8;line-height:1.7;}
+
+/* 各分析卡 */
+.res-card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:20px;}
+.res-card h3{font-size:14px;font-weight:800;margin-bottom:14px;color:var(--text);}
+.res-desc{font-size:14px;line-height:1.9;color:#475569;white-space:pre-wrap;}
+@media(prefers-color-scheme:dark){.res-desc{color:#94a3b8;}}
+
+/* 维度条 */
+.dim-list{display:grid;gap:13px;}
+.dim-row-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px;}
+.dim-name{font-size:13px;font-weight:600;}
+.dim-score{font-size:13px;font-weight:800;color:var(--accent);}
+.dim-track{height:7px;border-radius:999px;background:var(--soft);overflow:hidden;}
+.dim-fill{height:100%;border-radius:inherit;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .4s .1s;}
+.dim-poles{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-top:3px;}
+
+/* Top3 */
+.top3-list{display:grid;gap:9px;}
+.top3-row{
+  display:flex;align-items:center;gap:10px;
+  padding:11px 13px;border-radius:12px;border:1px solid var(--line);background:var(--soft);
+}
+.top3-medal{font-size:16px;width:24px;text-align:center;}
+.top3-info{flex:1;}
+.top3-code{font-weight:800;font-size:14px;}
+.top3-sub{font-size:12px;color:var(--muted);margin-top:2px;}
+.top3-pct{font-weight:800;color:var(--accent);font-size:14px;white-space:nowrap;}
+
+/* 免责 */
+.note-card{background:var(--soft);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;}
+.note-card p{font-size:13px;color:var(--muted);line-height:1.8;}
+
+/* 结果操作按钮 */
+.res-actions{display:grid;gap:10px;}
+.res-actions .btn-a{
+  padding:14px;border-radius:13px;font-size:15px;font-weight:800;text-align:center;
+}
+.btn-poster{background:var(--accent);color:#fff;box-shadow:0 6px 20px rgba(249,115,22,.3);}
+.btn-copy{background:var(--panel);color:var(--accent2);border:1.5px solid var(--accent);}
+.btn-restart{background:var(--soft);color:var(--muted);border:1px solid var(--line);}
+
+/* ══ 弹窗通用 ══ */
+.modal{position:fixed;inset:0;z-index:500;display:flex;align-items:flex-end;justify-content:center;}
+.modal[hidden]{display:none!important;}
+.modal-bg{position:absolute;inset:0;background:rgba(15,23,42,.55);}
+.modal-box{
+  position:relative;z-index:1;width:100%;max-width:520px;
+  max-height:90dvh;overflow:auto;
+  border-radius:22px 22px 0 0;border:1px solid var(--line);border-bottom:0;
+  background:var(--panel);
+  padding:20px 20px calc(20px + env(safe-area-inset-bottom,0));
+  box-shadow:0 -8px 40px rgba(0,0,0,.15);
+}
+@media(min-width:560px){
+  .modal{align-items:center;padding:20px;}
+  .modal-box{border-radius:20px;border-bottom:1px solid var(--line);}
+}
+.modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
+.modal-head h2{font-size:17px;font-weight:800;}
+.modal-close{
+  width:36px;height:36px;border-radius:10px;border:1px solid var(--line);
+  background:var(--soft);font-size:20px;color:var(--text);
+  display:flex;align-items:center;justify-content:center;
+}
+
+/* 免责弹窗 */
+.disc-body{font-size:14px;line-height:1.85;}
+.disc-body p{margin-bottom:10px;}
+.disc-body p:last-child{margin-bottom:0;}
+.disc-body ul{padding-left:1.3em;color:var(--muted);font-size:13px;margin-top:6px;}
+.disc-btns{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px;}
+.disc-btns button{flex:1 1 auto;padding:13px;border-radius:12px;font-weight:800;font-size:15px;}
+.disc-ok{background:var(--accent);color:#fff;}
+.disc-no{background:var(--soft);color:var(--muted);border:1px solid var(--line);}
+
+/* 分享图弹窗 */
+.poster-scroll{
+  text-align:center;background:var(--soft);border:1px solid var(--line);
+  border-radius:14px;padding:12px;margin:10px 0;
+  max-height:55dvh;overflow:auto;
+}
+.poster-scroll img{width:100%;border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,.12);}
+.poster-loading{font-size:13px;color:var(--muted);padding:36px 0;}
+.poster-btns{display:flex;gap:10px;flex-wrap:wrap;padding-top:12px;border-top:1px solid var(--line);}
+.poster-btns button{flex:1 1 auto;padding:12px;border-radius:12px;font-weight:800;font-size:14px;}
+.pbtn-save{background:var(--accent);color:#fff;}
+.pbtn-share{background:var(--panel);color:var(--accent2);border:1.5px solid var(--accent);}
+.pbtn-close{background:var(--soft);color:var(--muted);border:1px solid var(--line);}
+
+/* 历史记录 */
+.hist-list{display:grid;gap:8px;}
+.hist-row{
+  display:flex;align-items:center;gap:10px;
+  padding:12px 14px;border-radius:13px;border:1px solid var(--line);background:var(--soft);
+  cursor:pointer;width:100%;text-align:left;
+}
+.hist-code{font-weight:800;color:var(--accent);font-size:14px;min-width:46px;}
+.hist-name{font-size:13px;color:var(--text);flex:1;}
+.hist-time{font-size:11px;color:var(--muted);white-space:nowrap;}
+.hist-empty{font-size:13px;color:var(--muted);padding:8px 0;}
+</style>
+</head>
+<body>
+
+<!-- ══ 首页 ══ -->
+<div id="pg-home" class="page on">
+  <div class="home-body">
+    <div class="home-eyebrow">💼 职场人格测试 · 娱乐向</div>
+    <h1 class="home-h1">MBTI 已过气，<br><span>MDTI</span> 来了。</h1>
+    <p class="home-sub">MBTI 测心理，SBTI 测精神，MDTI 测你在职场被麻了多少次。<br>20 题、8 维度、24 种职场人格。</p>
+    <div class="home-chips">
+      <span class="chip"><strong>20</strong> 道题</span>
+      <span class="chip"><strong>8</strong> 个维度</span>
+      <span class="chip"><strong>24</strong> 种人格</span>
+      <span class="chip">🐟 全行业通用</span>
+      <span class="chip">每页 2 题，自动翻页</span>
+    </div>
+    <button class="home-cta" id="btnStart">开始测试</button>
+    <button class="home-sec" id="btnHistory">查看历史记录</button>
+  </div>
+  <div class="home-footer">MDTI · Ma Dan Type Indicator · 纯娱乐，非心理学诊断</div>
+</div>
+
+<!-- ══ 测试页 ══ -->
+<div id="pg-test" class="page">
+  <!-- 顶部进度栏 -->
+  <div class="prog-bar-wrap">
+    <div class="prog-bar-inner">
+      <button class="prog-back" id="btnProgBack" title="上一页">←</button>
+      <div class="prog-track"><div class="prog-fill" id="progFill"></div></div>
+      <span class="prog-label" id="progLabel">1 / 10</span>
+    </div>
+  </div>
+
+  <!-- 题目滚动区 -->
+  <div class="test-scroll" id="testScroll">
+    <!-- 动态注入 .q-page 分页 -->
+  </div>
+
+  <!-- 页底操作 -->
+  <div class="page-nav" id="pageNav">
+    <span class="nav-hint" id="navHint">选完自动进下一题</span>
+    <button class="btn-next" id="btnNext" disabled>下一页 →</button>
+  </div>
+</div>
+
+<!-- ══ 结果页 ══ -->
+<div id="pg-result" class="page">
+  <div class="result-inner">
+    <div class="res-hero">
+      <div class="res-kicker">你的职场人格</div>
+      <div class="res-code" id="resCode">FISH</div>
+      <div class="res-name" id="resName">摸鱼大师</div>
+      <div class="res-pct" id="resPct">匹配度 88%</div>
+      <div class="res-sub" id="resSub"></div>
+    </div>
+    <div class="res-card">
+      <h3>🔍 深度解读</h3>
+      <div class="res-desc" id="resDesc"></div>
+    </div>
+    <div class="res-card">
+      <h3>📊 八维职场评分</h3>
+      <div class="dim-list" id="dimList"></div>
+    </div>
+    <div class="res-card">
+      <h3>🏆 候选人格 Top 3</h3>
+      <div class="top3-list" id="top3List"></div>
+    </div>
+    <div class="note-card">
+      <p>⚠️ 纯娱乐测试，不代表任何心理诊断或职业建议。测出什么都别写进简历，谢谢。</p>
+    </div>
+    <div class="res-actions">
+      <button class="btn-a btn-poster" id="btnPoster">🖼️ 生成分享图</button>
+      <button class="btn-a btn-copy" id="btnCopy">🔗 复制分享链接</button>
+      <button class="btn-a btn-restart" id="btnRestart">🔄 重新测试</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 免责弹窗 ══ -->
+<div class="modal" id="modalDisc" hidden>
+  <div class="modal-bg" id="discBg"></div>
+  <div class="modal-box">
+    <div class="modal-head">
+      <h2>测之前，先看这个</h2>
+      <button class="modal-close" id="discClose">×</button>
+    </div>
+    <div class="disc-body">
+      <p>这是一个<strong>纯娱乐</strong>的职场趣味测试，图一乐，与心理学、绩效、HR无关。</p>
+      <p><strong>数据隐私：</strong></p>
+      <ul>
+        <li>答题数据<strong>不会上传</strong>任何服务器</li>
+        <li>历史记录仅保存在本机浏览器（localStorage）</li>
+        <li>换设备或清除缓存后记录消失</li>
+      </ul>
+      <p>点击「开始」即表示你自担「测出虚无主义者后当场辞职」的风险。</p>
+    </div>
+    <div class="disc-btns">
+      <button class="disc-no" id="discNo">再想想</button>
+      <button class="disc-ok" id="discOk">已知晓，开始</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 历史记录弹窗 ══ -->
+<div class="modal" id="modalHist" hidden>
+  <div class="modal-bg" id="histBg"></div>
+  <div class="modal-box">
+    <div class="modal-head">
+      <h2>历史记录</h2>
+      <button class="modal-close" id="histClose">×</button>
+    </div>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:12px;">仅保存在本机浏览器，清除缓存后消失。</p>
+    <div class="hist-list" id="histList"></div>
+    <button style="margin-top:12px;width:100%;padding:11px;border-radius:11px;border:1px solid var(--line);background:var(--soft);color:var(--muted);font-weight:700;font-size:13px;" id="btnClearHist">清空记录</button>
+  </div>
+</div>
+
+<!-- ══ 分享图弹窗 ══ -->
+<div class="modal" id="modalPoster" hidden>
+  <div class="modal-bg" id="posterBg"></div>
+  <div class="modal-box" style="max-width:440px;">
+    <div class="modal-head">
+      <h2>分享图</h2>
+      <button class="modal-close" id="posterClose">×</button>
+    </div>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:6px;">长按图片可保存到相册</p>
+    <div class="poster-scroll">
+      <div class="poster-loading" id="posterLoading">生成中…</div>
+      <img id="posterImg" alt="分享图" style="display:none;"/>
+    </div>
+    <div class="poster-btns">
+      <button class="pbtn-save btn-a" id="btnPosterSave">💾 保存</button>
+      <button class="pbtn-share btn-a" id="btnPosterShare" hidden>📤 分享</button>
+      <button class="pbtn-close btn-a" id="btnPosterClose">关闭</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════
+// 维度定义（8个）
+// ══════════════════════════════════════════
+const DIMS = [
+  {id:'Lazy',  name:'摸鱼指数',   low:'全勤卷王',       high:'摸鱼大师'},
+  {id:'Tough', name:'PUA抗性',    low:'一击即倒',       high:'钢铁心脏'},
+  {id:'Social',name:'社交能量',   low:'社恐小透明',     high:'社牛发电机'},
+  {id:'Perf',  name:'完美主义',   low:'差不多就行',     high:'细节控狂魔'},
+  {id:'Ambit', name:'野心指数',   low:'佛系打工人',     high:'天生要出人头地'},
+  {id:'Form',  name:'形式主义',   low:'只看实质',       high:'PPT爱好者'},
+  {id:'Sensi', name:'职场感知',   low:'政治白痴',       high:'老油条人精'},
+  {id:'Emot',  name:'情绪稳定性', low:'玻璃心',         high:'泰山崩于前'},
+];
+
+// ══════════════════════════════════════════
+// 题目（20道，每页2道，共10页）
+// ══════════════════════════════════════════
+const QUESTIONS = [
+  // 第1页
+  {id:'q1',dim:'Lazy',
+   text:'上班路上，你在想什么？',
+   opts:[
+     {l:'今天任务怎么安排，先做哪件',v:1},
+     {l:'今天吃什么，顺带想了想工作',v:2},
+     {l:'今天怎么摸得开心又不被发现',v:3},
+   ]},
+  {id:'q2',dim:'Tough',
+   text:'领导当众说你方案"不够成熟"，你内心第一反应是？',
+   opts:[
+     {l:'脸红心跳，回去反复想了一整天',v:1},
+     {l:'有点不爽，但回去认真看看哪里有问题',v:2},
+     {l:'当场请他具体说哪里不成熟',v:3},
+   ]},
+  // 第2页
+  {id:'q3',dim:'Social',
+   text:'公司来了新同事，你会？',
+   opts:[
+     {l:'等他来找我说话',v:1},
+     {l:'路过点个头，有机会再聊',v:2},
+     {l:'主动过去自我介绍，带ta熟悉环境',v:3},
+   ]},
+  {id:'q4',dim:'Perf',
+   text:'交文件之前，你会检查几遍？',
+   opts:[
+     {l:'写完就发，差不多就行',v:1},
+     {l:'大致扫一遍',v:2},
+     {l:'至少三遍，错别字/格式/逻辑必须过一遍',v:3},
+   ]},
+  // 第3页
+  {id:'q5',dim:'Ambit',
+   text:'同事升职了，你第一反应是？',
+   opts:[
+     {l:'恭喜ta，和我没什么关系',v:1},
+     {l:'替ta高兴，顺带想想自己什么时候',v:2},
+     {l:'立刻分析ta怎么做到的，我要学什么',v:3},
+   ]},
+  {id:'q6',dim:'Form',
+   text:'做一个内部汇报，你会？',
+   opts:[
+     {l:'几页文字说清楚就行，PPT能省则省',v:1},
+     {l:'图文并茂，结构清晰',v:2},
+     {l:'精心设计每一页，字体/颜色/对齐必须统一',v:3},
+   ]},
+  // 第4页
+  {id:'q7',dim:'Sensi',
+   text:'领导群里单独表扬了某个同事，你会？',
+   opts:[
+     {l:'继续干活，和我没关系',v:1},
+     {l:'顺手点个赞',v:2},
+     {l:'思考ta为什么被表扬，自己是否该适时展示',v:3},
+   ]},
+  {id:'q8',dim:'Emot',
+   text:'项目临时被砍，你之前的努力全部白费，你的状态？',
+   opts:[
+     {l:'情绪崩了，需要好几天缓过来',v:1},
+     {l:'沮丧，但调整一下就继续',v:2},
+     {l:'立刻接受，马上问下一步是什么',v:3},
+   ]},
+  // 第5页
+  {id:'q9',dim:'Lazy',
+   text:'领导说"下午三点前交报告"，现在上午十点，你会？',
+   opts:[
+     {l:'上午就开始，给自己留时间修改',v:1},
+     {l:'午饭后开始，两点半前交',v:2},
+     {l:'两点五十开始，反正来得及',v:3},
+   ]},
+  {id:'q10',dim:'Tough',
+   text:'"别人都能做到，你为什么不行？"你的反应？',
+   opts:[
+     {l:'默默接受，觉得自己确实不行',v:1},
+     {l:'有点委屈，但努力说服自己加油',v:2},
+     {l:'心想：别人是别人，我是我，这个对比没有意义',v:3},
+   ]},
+  // 第6页
+  {id:'q11',dim:'Social',
+   text:'团建活动，你的状态通常是？',
+   opts:[
+     {l:'找角落坐着，能不说话就不说话',v:1},
+     {l:'被动参与，有人叫才配合',v:2},
+     {l:'主动带动气氛，恨不得自己主持',v:3},
+   ]},
+  {id:'q12',dim:'Ambit',
+   text:'一个额外的、没有加薪的新项目机会，你会？',
+   opts:[
+     {l:'拒绝，不做额外的事',v:1},
+     {l:'看项目是否有意思再决定',v:2},
+     {l:'接！能见更多人、学更多东西',v:3},
+   ]},
+  // 第7页
+  {id:'q13',dim:'Sensi',
+   text:'你能感觉到公司要发生变化（调整/裁员/架构变动）吗？',
+   opts:[
+     {l:'等官方通知，平时不关注',v:1},
+     {l:'有时能感觉到一些风向',v:2},
+     {l:'通常比正式通知早很久就能从细节推断出来',v:3},
+   ]},
+  {id:'q14',dim:'Emot',
+   text:'同事无意说了让你觉得被冒犯的话，你会？',
+   opts:[
+     {l:'闷在心里，影响一整天',v:1},
+     {l:'有点不舒服，过会儿就忘了',v:2},
+     {l:'当时就处理或者直接翻篇，不占用情绪',v:3},
+   ]},
+  // 第8页
+  {id:'q15',dim:'Lazy',
+   text:'你的电脑通常同时开着多少个"和工作无关"的标签页？',
+   opts:[
+     {l:'0个，干活时专注',v:1},
+     {l:'1-3个，偶尔切换',v:2},
+     {l:'一堆，小说/视频/购物轮流切',v:3},
+   ]},
+  {id:'q16',dim:'Perf',
+   text:'接手别人做了一半的工作，发现有些地方不够好，你会？',
+   opts:[
+     {l:'将就着往下做，反正能交差',v:1},
+     {l:'改掉影响结果的部分',v:2},
+     {l:'从头梳理，把不对的全部改掉再往下做',v:3},
+   ]},
+  // 第9页
+  {id:'q17',dim:'Form',
+   text:'你的工作周报风格？',
+   opts:[
+     {l:'三行字，任务完成就行',v:1},
+     {l:'条目清晰，说明进展',v:2},
+     {l:'有总结、有数据、有下一步计划，一看就是认真在做',v:3},
+   ]},
+  {id:'q18',dim:'Social',
+   text:'工作群里，你的存在感？',
+   opts:[
+     {l:'潜水党，@我才冒头',v:1},
+     {l:'有事说事，不闲聊',v:2},
+     {l:'积极发言，有时候还发早安',v:3},
+   ]},
+  // 第10页
+  {id:'q19',dim:'Emot',
+   text:'同时压下来三件紧急的事，你的状态？',
+   opts:[
+     {l:'脑子宕机，不知道先做哪个',v:1},
+     {l:'有点乱，但能排个优先级',v:2},
+     {l:'迅速拆解，按优先级逐个击破',v:3},
+   ]},
+  {id:'q20',dim:'Ambit',
+   text:'你对"五年后的自己"有具体规划吗？',
+   opts:[
+     {l:'没有，活好当下就行',v:1},
+     {l:'有个大概方向，但不确定',v:2},
+     {l:'有非常具体的目标和路径',v:3},
+   ]},
+];
+
+const PER_PAGE = 2;
+const TOTAL_PAGES = Math.ceil(QUESTIONS.length / PER_PAGE);
+
+// ══════════════════════════════════════════
+// 24种人格类型
+// ══════════════════════════════════════════
+const TYPES = [
+  {code:'KING',name:'卷王',sub:'凌晨三点，只有你和楼里的保洁阿姨还在。',
+   desc:`恭喜你，你是同事们最爱又最恨的存在。\n\n你的字典里没有"差不多"，只有"再完善一下"。你会把一个普通汇报反复打磨到凌晨，把一个小项目做成行业标杆。领导说"努力"，你听成"极限"。\n\n有人说35岁危机，你心想：我35岁前早就升上去了。你的时间管理精确到15分钟，你的工作清单永远比别人长三倍。\n\n代价是：你已经不记得上次完整睡一觉是什么时候了。颈椎、腰椎和眼睛已经联合递交了辞职信，但你还没批准。`,
+   profile:{Lazy:1,Tough:3,Social:2,Perf:3,Ambit:3,Form:2,Sensi:2,Emot:3}},
+  {code:'FISH',name:'摸鱼大师',sub:'显示在线，实则已经神游到下班后的世界。',
+   desc:`你是职场进化史上的一个奇迹。\n\n你能做到100%摸鱼的同时让所有人以为你在全力工作。屏幕上永远显示工作文档，表情永远严肃专注，实际上你已经追完了第三季，还顺便在手机上下了一单外卖。\n\n开会时你偶尔点头，偶尔发出"嗯嗯"的声音，没有人知道你其实一个字都没听进去。\n\n你并不懒，你只是深刻理解了"能量守恒定律在职场同样适用"。`,
+   profile:{Lazy:3,Tough:2,Social:1,Perf:1,Ambit:1,Form:1,Sensi:2,Emot:2}},
+  {code:'ZOMB',name:'僵尸打工人',sub:'身体在上班，灵魂在出差，预计不回。',
+   desc:`你不是在工作，你只是在"出现"。\n\n你的身体每天准时到达工位，但那只是一具被工牌激活的躯壳。你会对所有事回复"好的"，但第二天依然原地不动。\n\n你经历过热情，经历过努力，经历过被辜负——你不是突然变成这样的，你是一点一点被耗干的。\n\n僵尸模式是你找到的最低消耗生存策略。或许有一天你会重启，但无论如何，先照顾好自己。`,
+   profile:{Lazy:3,Tough:1,Social:1,Perf:1,Ambit:1,Form:1,Sensi:1,Emot:1}},
+  {code:'BOSS',name:'天生领导',sub:'永远在开会，永远在做PPT，永远在对齐。',
+   desc:`你的一天不是由工作构成的，是由"会议"构成的。\n\n上午战略对齐，下午进度同步，傍晚复盘总结——你穿梭于各个会议室之间，永远手持一杯咖啡，永远带着三页刚改完的PPT。\n\n你善于发现问题，善于提出方向，善于说"这个很重要，我们要认真梳理"——然后把梳理的任务分配出去。\n\n没有你，大家可能多出三个小时干活。有了你，大家才知道自己在干什么方向的活。`,
+   profile:{Lazy:1,Tough:3,Social:3,Perf:2,Ambit:3,Form:3,Sensi:3,Emot:3}},
+  {code:'QUIT',name:'心已离职',sub:'人在工位，魂在offer，简历永远是最新版。',
+   desc:`你的心已经提离职了，只是身体还没收到通知。\n\n你的简历永远是最新的，招聘软件永远开着"在找工作"——不是真的很想走，只是"保持选项开着"。\n\n你是一个清醒的人。你知道这份工作的问题在哪，你知道自己值多少钱，你也知道出去不一定更好。所以你维持着一种奇妙的平静：反正随时可以跑，所以不用太用力。`,
+   profile:{Lazy:2,Tough:3,Social:1,Perf:1,Ambit:2,Form:1,Sensi:3,Emot:2}},
+  {code:'HOPE',name:'大冤种',sub:'永远满怀希望，永远被现实温柔摁头。',
+   desc:`你相信努力有回报，你相信认真的人终将被看见。\n\n你是最认真写周报的，是加班最晚还不抱怨的，是有问题最先站出来承担的——然后绩效C，然后你写的文档成了别人升职的材料，然后你被说"情商不够高"。\n\n大冤种不是贬义词。你的真诚和善良是这个世界上最稀缺的东西之一。只是不是每家公司都配得上你这份真诚。`,
+   profile:{Lazy:1,Tough:1,Social:2,Perf:2,Ambit:3,Form:2,Sensi:1,Emot:2}},
+  {code:'LONE',name:'独行侠',sub:'戴上耳机，世界与我无关，别打扰我干活。',
+   desc:`你来工作是为了把事做好，不是为了搞关系。\n\n你不需要团队氛围，不需要鼓励，只需要一个清晰的目标和足够的时间。你一个人能做完三个人的事，前提是别人不要一直来打断你。\n\n你讨厌无意义的会议，讨厌没有结论的讨论，讨厌"能来我这一下吗"的灵魂拷问。你的工作成果可以说话，你不需要额外表演努力。`,
+   profile:{Lazy:2,Tough:2,Social:1,Perf:3,Ambit:2,Form:1,Sensi:1,Emot:3}},
+  {code:'BURN',name:'已燃尽者',sub:'曾经最拼，现在最空，燃料耗尽请等待重启。',
+   desc:`你不是生来就这样的。\n\n有段时间你是最努力的那个——最晚走，第一个来，方案改了十稿，绩效还是B+。然后那次当众批评，那次莫名被边缘，那次开口申请调薪被"公司现在不是时候"打发掉。\n\n你不是突然摆烂的，你是一点一点被消耗掉的。\n\n现在的你不再期待，不再愤怒，甚至不再委屈，只有一种平静的虚无。也许哪天会重新点燃，但现在——先好好休息一下。`,
+   profile:{Lazy:2,Tough:1,Social:1,Perf:2,Ambit:1,Form:1,Sensi:2,Emot:1}},
+  {code:'CTRL',name:'完美控',sub:'不完美不提交，不完整不发出，事情要么不做要么做到极致。',
+   desc:`你有一种天赋：能发现别人发现不了的问题。\n\n别人觉得"差不多了"的东西，你能一眼看出三个细节问题。你会在截止前一小时再改一遍格式，会在已经通过的方案里继续优化措辞。\n\n你的成果有时比截止时间晚，但从来不会让人失望。你的标准在团队里是天花板，也因此你经常是最累的那个。`,
+   profile:{Lazy:1,Tough:2,Social:1,Perf:3,Ambit:3,Form:3,Sensi:2,Emot:2}},
+  {code:'GLUE',name:'人际粘合剂',sub:'谁都认识你，你也认识谁都，公司非正式基础设施。',
+   desc:`你是这个团队最重要的隐形资产。\n\n新人第一周就和你混熟了，你知道每个人的喜好，知道谁最近状态不好，知道哪两个人有矛盾——这些你都知道，但你从来不乱说。\n\n你是团队里真正的润滑剂，只是这件事不写在任何人的KPI里。\n\n等你离职的那天，大家才会意识到你有多重要。`,
+   profile:{Lazy:1,Tough:2,Social:3,Perf:2,Ambit:2,Form:2,Sensi:3,Emot:3}},
+  {code:'CHAT',name:'@所有人专业户',sub:'每个群你都发言，每条消息你都回，通知从不落下。',
+   desc:`你是公司通讯效率的最大贡献者，也是某些人手机最大的通知噪音来源。\n\n你积极响应每一条消息，转发每一个重要通知，@提醒每一个可能遗漏的人——然后大家礼貌地说"好的谢谢"，同时默默点了免打扰。\n\n你不是话多，你是真的在用力协作。你觉得信息流通就是效率保障，这没有错——只是整合一下再发确实更好。`,
+   profile:{Lazy:1,Tough:2,Social:3,Perf:1,Ambit:2,Form:2,Sensi:2,Emot:3}},
+  {code:'HIDE',name:'群内隐形人',sub:'在线，有手机，但你永远不知道我看没看。',
+   desc:`你不是不在，你只是不说话。\n\n群里所有的通知你都看了，所有的讨论你都观摩了，所有的八卦你都围观了——但你不会发言，除非事情到了不得不表态的地步。\n\n但这不代表你不思考。其实你对很多事都有看法，只是你选择不说。因为你知道：很多话说了没用，有些讨论参与了只会被卷进去。\n\n这是一种经过验证的生存智慧。`,
+   profile:{Lazy:2,Tough:2,Social:1,Perf:2,Ambit:1,Form:1,Sensi:3,Emot:2}},
+  {code:'WINE',name:'酒桌外交家',sub:'核心竞争力在饭局上，生意都是喝出来的。',
+   desc:`你的核心竞争力不在专业技能，在于你的人脉网络和那杯永远举得恰到好处的酒。\n\n你知道哪位客户偏好什么话题，哪个合作方在意什么礼节。你能让陌生人在两小时内觉得认识了你十年。你的通讯录堪称传奇，任何资源想打通，找你最快。\n\n你在很多人眼里"不务正业"，但你知道：正式的东西只是流程，关系才是真正的生产力。`,
+   profile:{Lazy:1,Tough:3,Social:3,Perf:1,Ambit:3,Form:3,Sensi:3,Emot:3}},
+  {code:'LOOP',name:'无限循环者',sub:'每天都是昨天，昨天都是明天，日历是摆设。',
+   desc:`你已经不记得上一次做新事情是什么时候了。\n\n你的工作高度稳定：每周的任务大同小异，每月的总结换汤不换药，每季度的复盘得出相同结论。\n\n你和这份工作达成了某种和平协议：它不为难你，你不抱怨它，用这份稳定换来了下班后真实的生活。\n\n只是偶尔，在某个普通的周四下午，你会突然感到一丝空洞：就这样了？`,
+   profile:{Lazy:2,Tough:2,Social:2,Perf:2,Ambit:1,Form:2,Sensi:1,Emot:2}},
+  {code:'HACK',name:'骚操作大师',sub:'正常流程？不存在的，我有更快的路。',
+   desc:`别人走大路，你走捷径；别人用工具，你改工具；别人做三天，你找到一个没人发现的方法两小时搞定。\n\n你的脑子里装着大量"别人没想到但其实可以"的解法。有时候你的操作让人目瞪口呆，想了五分钟才反应过来——好像还挺对？\n\n你的很多"奇招"后来成了团队标准做法，只是没有人记得是你最先想到的。这很公平，你也不在乎署名。`,
+   profile:{Lazy:2,Tough:3,Social:1,Perf:2,Ambit:2,Form:1,Sensi:2,Emot:3}},
+  {code:'VOID',name:'虚无主义者',sub:'做什么都无所吊谓，反正最后都一样。',
+   desc:`你看穿了一切，包括这个测试。\n\n升职？无所谓。加薪？无所谓。绩效C？无所谓。你已经超越了职场的喜怒哀乐，进入了一种近乎禅意的境界——万事皆虚，好好回家吃饭才是真。\n\n你不是不聪明，恰恰相反，你太清醒了，清醒到对所有事保持安全距离。你见过太多认真的人没有好结果，太多努力最终消失在公司历史里。\n\n这是一种保护机制，也可能是值得认真审视的信号。`,
+   profile:{Lazy:3,Tough:3,Social:1,Perf:1,Ambit:1,Form:1,Sensi:3,Emot:3}},
+  {code:'MOMA',name:'职场妈妈',sub:'照顾所有人，但没有人照顾你。',
+   desc:`你是团队里无偿的后勤部长、心理咨询师和救火队员。\n\n有人做不完的工作，你帮一把；有人搞不定的情绪，你去开导；有人犯的错要背锅，你想着别让ta太难堪。\n\n你把整个团队当家人，但在公司绩效表里，"帮助同事"这一栏没有打分项。\n\n你值得被更好地对待。先从学会说"不"开始。`,
+   profile:{Lazy:1,Tough:1,Social:3,Perf:2,Ambit:2,Form:2,Sensi:2,Emot:2}},
+  {code:'TALK',name:'嘴强王者',sub:'方案说不清楚没关系，我嘴上给你圆回来。',
+   desc:`你有一种神奇能力：能把任何事情说得听起来很有道理。\n\n方案有漏洞？你能在被追问的三秒内补上一个听起来可信的逻辑。数据对不上？你能用"趋势性判断"把它圆过去。\n\n你不是在糊弄人，你是真的相信"沟通能力是核心生产力"。你的天赋在那些需要"对外"的岗位上会发光，前提是背后有靠谱的人帮你兑现承诺。`,
+   profile:{Lazy:2,Tough:3,Social:3,Perf:1,Ambit:3,Form:3,Sensi:3,Emot:3}},
+  {code:'NUMB',name:'感受不到疼痛者',sub:'deadline压着，领导骂了，客户投诉，还好我不疼。',
+   desc:`别人崩溃的场景，到你这里只是"又一个需要解决的问题"。\n\n三件紧急的事同时来？排个优先级。突然被临时顶包一个你完全没准备的发言？深呼吸，上。熬了三天的方案被一句话否定？回去改。\n\n你不是不累，你只是不在"感受累"上花时间。这让你成为同事眼中最可靠的那个人，也让你成为最容易被放心拿捏的那个人。`,
+   profile:{Lazy:1,Tough:3,Social:2,Perf:2,Ambit:2,Form:2,Sensi:2,Emot:3}},
+  {code:'HALF',name:'半途而废者',sub:'每个想法都很好，每件事都只做了一半。',
+   desc:`你不缺想法，你缺的是把想法做完的意愿。\n\n你的文件夹里有十个"进行中"的项目，每一个在启动时都让你热情满满，每一个在推进到一半时都遇到了某种"比这个更重要的事"。\n\n你不是懒，你只是对新事物的兴奋度永远高于对旧事物的耐力。你的脑子是个创意源泉，找一个愿意帮你跟进和推进的人，你们会是绝配。`,
+   profile:{Lazy:2,Tough:2,Social:2,Perf:1,Ambit:3,Form:2,Sensi:1,Emot:2}},
+  {code:'SPY',name:'职场侦探',sub:'什么都看在眼里，什么都记在心里，什么都没说出来。',
+   desc:`你对职场信息有一种近乎本能的感知力。\n\n谁最近和谁走得近，谁的项目要被砍，哪次会议之后公司风向变了——这些你通常比任何人都早知道，而且你的判断往往是对的。\n\n但你从不轻易表态，不主动分享，不结盟，不站队。你觉得信息是资产，沉默是保护。\n\n你是职场里的侦探，只是你永远不会公开破案。`,
+   profile:{Lazy:2,Tough:3,Social:1,Perf:2,Ambit:2,Form:1,Sensi:3,Emot:3}},
+  {code:'STAR',name:'天选打工人',sub:'进什么组，什么组出成绩；做什么事，什么事被看见。',
+   desc:`你是那种让人看了就觉得"这个人会有前途"的人。\n\n不是因为你特别聪明，是因为你有一种稀有的综合能力：能干活、能说话、能处理关系、能在该出现的时候出现、在不该多嘴的时候适可而止。\n\n你的运气也好得不像话——重要的项目总是在你参与后有了转机。但你知道，这不全是运气，是你一直在准备着。`,
+   profile:{Lazy:1,Tough:3,Social:3,Perf:3,Ambit:3,Form:3,Sensi:3,Emot:3}},
+  {code:'ATM',name:'送钱者',sub:'不是真的送钱，但你的时间、精力和情绪一直在被提现。',
+   desc:`你在永远"支付"。支付时间，支付精力，支付耐心，支付一个本该安静的周末，支付一个本不属于你的责任。\n\n你不擅长拒绝，你害怕让人失望，你觉得"帮一下又不会死"——结果帮了所有人，唯独没帮到自己。\n\n你是公司里所有人的救火队员和情绪垃圾桶。大家都喜欢你，没有人在乎你累不累。先爱自己一点。`,
+   profile:{Lazy:2,Tough:1,Social:3,Perf:2,Ambit:2,Form:2,Sensi:1,Emot:1}},
+  {code:'REAL',name:'整顿职场人',sub:'不惯毛病，不讲情面，能走正门绝不走后门。',
+   desc:`你来到职场的使命，就是让大家知道事情可以不这么干。\n\n你不吃"规矩就是这样的"这套，你会问为什么要这样；你不接受"大家都是这么做的"，你会说那大家都错了；你不认为熬夜加班是荣誉，你认为那是效率问题。\n\n你得罪了一些人，改变了一些事，也碰了一些壁。你是这个环境需要的人，不一定是这个环境喜欢的人。`,
+   profile:{Lazy:2,Tough:3,Social:2,Perf:3,Ambit:3,Form:1,Sensi:2,Emot:3}},
+];
+
+// ══════════════════════════════════════════
+// 状态
+// ══════════════════════════════════════════
+const answers = {};  // {qId: val}
+let curPage = 0;
+let lastResult = null;
+
+// ══════════════════════════════════════════
+// 构建题目分页 DOM
+// ══════════════════════════════════════════
+function buildTestPages(){
+  const scroll = document.getElementById('testScroll');
+  scroll.innerHTML = '';
+  for(let p = 0; p < TOTAL_PAGES; p++){
+    const div = document.createElement('div');
+    div.className = 'q-page';
+    div.id = 'qp-' + p;
+    const qs = QUESTIONS.slice(p * PER_PAGE, p * PER_PAGE + PER_PAGE);
+    div.innerHTML = qs.map((q, qi) => {
+      const globalIdx = p * PER_PAGE + qi;
+      const dim = DIMS.find(d => d.id === q.dim);
+      return `<div class="q-card" id="qcard-${q.id}">
+        <div class="q-header">
+          <div class="q-num">Q${globalIdx + 1}</div>
+          <span class="q-dim">${dim ? dim.name : q.dim}</span>
+        </div>
+        <div class="q-text">${esc(q.text)}</div>
+        <div class="opts" id="opts-${q.id}">
+          ${q.opts.map((o, oi) => `
+            <button class="opt" data-qid="${q.id}" data-val="${o.v}">
+              <span class="opt-key">${String.fromCharCode(65+oi)}</span>
+              <span class="opt-text">${esc(o.l)}</span>
+            </button>`).join('')}
+        </div>
+      </div>`;
+    }).join('');
+    scroll.appendChild(div);
+  }
+  // 绑定选项点击
+  document.querySelectorAll('.opt').forEach(btn => {
+    btn.addEventListener('click', () => onOptClick(btn));
+  });
+}
+
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// ══════════════════════════════════════════
+// 选项交互
+// ══════════════════════════════════════════
+function onOptClick(btn){
+  const qid = btn.dataset.qid;
+  const val = parseInt(btn.dataset.val);
+  answers[qid] = val;
+
+  // 高亮选中
+  document.querySelectorAll(`[data-qid="${qid}"]`).forEach(b => b.classList.remove('chosen'));
+  btn.classList.add('chosen');
+
+  updateProgBar();
+  checkAutoNext();
+}
+
+function checkAutoNext(){
+  const qs = QUESTIONS.slice(curPage * PER_PAGE, curPage * PER_PAGE + PER_PAGE);
+  const allDone = qs.every(q => answers[q.id] !== undefined);
+  if(!allDone) return;
+
+  const isLast = curPage >= TOTAL_PAGES - 1;
+  if(isLast){
+    // 最后一页：激活提交按钮
+    const btn = document.getElementById('btnNext');
+    btn.disabled = false;
+    btn.textContent = '查看结果 🎉';
+    btn.className = 'btn-submit';
+    document.getElementById('navHint').textContent = '全部完成！点击查看你的职场人格';
+  } else {
+    // 自动翻页（略微延迟，让用户感受到选中效果）
+    setTimeout(() => goPage(curPage + 1), 320);
+  }
+}
+
+// ══════════════════════════════════════════
+// 翻页
+// ══════════════════════════════════════════
+function goPage(p){
+  if(p < 0 || p >= TOTAL_PAGES) return;
+  document.querySelectorAll('.q-page').forEach(el => el.classList.remove('on'));
+  const target = document.getElementById('qp-' + p);
+  if(target){
+    target.classList.add('on');
+    // 触发重新动画
+    target.style.animation = 'none';
+    target.offsetHeight; // reflow
+    target.style.animation = '';
+  }
+  curPage = p;
+  updateProgBar();
+  updateNavBar();
+  document.getElementById('testScroll').scrollTop = 0;
+}
+
+function updateProgBar(){
+  const done = Object.keys(answers).length;
+  const total = QUESTIONS.length;
+  const pct = Math.round(done / total * 100);
+  document.getElementById('progFill').style.width = pct + '%';
+  document.getElementById('progLabel').textContent = `${curPage + 1} / ${TOTAL_PAGES}`;
+}
+
+function updateNavBar(){
+  const qs = QUESTIONS.slice(curPage * PER_PAGE, curPage * PER_PAGE + PER_PAGE);
+  const allDone = qs.every(q => answers[q.id] !== undefined);
+  const isLast = curPage >= TOTAL_PAGES - 1;
+  const btn = document.getElementById('btnNext');
+
+  if(isLast && allDone){
+    btn.disabled = false;
+    btn.textContent = '查看结果 🎉';
+    btn.className = 'btn-submit';
+    document.getElementById('navHint').textContent = '全部完成！';
+  } else if(isLast){
+    btn.disabled = true;
+    btn.textContent = '查看结果 🎉';
+    btn.className = 'btn-submit';
+    document.getElementById('navHint').textContent = '还差一点…';
+  } else if(allDone){
+    // 已答完但还没自动翻（理论上不会出现，保险起见）
+    btn.disabled = false;
+    btn.textContent = '下一页 →';
+    btn.className = 'btn-next';
+    document.getElementById('navHint').textContent = '可以继续了';
+  } else {
+    btn.disabled = true;
+    btn.textContent = '下一页 →';
+    btn.className = 'btn-next';
+    document.getElementById('navHint').textContent = '选完自动进下一题';
+  }
+
+  // 恢复已选状态
+  qs.forEach(q => {
+    if(answers[q.id] !== undefined){
+      document.querySelectorAll(`[data-qid="${q.id}"]`).forEach(b => {
+        b.classList.toggle('chosen', parseInt(b.dataset.val) === answers[q.id]);
+      });
+    }
+  });
+}
+
+// ══════════════════════════════════════════
+// 计算结果
+// ══════════════════════════════════════════
+function computeResult(){
+  const scores = {}, counts = {};
+  DIMS.forEach(d => { scores[d.id] = 0; counts[d.id] = 0; });
+  QUESTIONS.forEach(q => {
+    const v = answers[q.id] || 1;
+    scores[q.dim] = (scores[q.dim]||0) + v;
+    counts[q.dim] = (counts[q.dim]||0) + 1;
+  });
+  const norm = {};
+  DIMS.forEach(d => {
+    const n = counts[d.id] || 1;
+    // val range: n~3n → normalize to 0~100
+    norm[d.id] = Math.round((scores[d.id] - n) / (n * 2) * 100);
+  });
+  const ranked = TYPES.map(t => {
+    let dist = 0;
+    DIMS.forEach(d => {
+      const tv = (t.profile[d.id]||2) / 3 * 100;
+      dist += Math.pow(tv - norm[d.id], 2);
+    });
+    return { type: t, dist: Math.sqrt(dist) };
+  }).sort((a,b) => a.dist - b.dist);
+  const maxDist = Math.sqrt(DIMS.length * 100 * 100);
+  const pct = Math.round((1 - ranked[0].dist / maxDist) * 100);
+  return {
+    scores, norm,
+    main: ranked[0].type,
+    matchPct: pct,
+    top: ranked.slice(0, 3).map((r, i) => ({
+      ...r.type,
+      pct: i === 0 ? pct : Math.max(18, pct - 13 - i * 9)
+    }))
+  };
+}
+
+// ══════════════════════════════════════════
+// 渲染结果
+// ══════════════════════════════════════════
+function renderResult(res){
+  const t = res.main;
+  document.getElementById('resCode').textContent = t.code;
+  document.getElementById('resName').textContent = t.name;
+  document.getElementById('resPct').textContent = `匹配度 ${res.matchPct}%`;
+  document.getElementById('resSub').textContent = t.sub;
+  document.getElementById('resDesc').textContent = t.desc;
+
+  const dimList = document.getElementById('dimList');
+  dimList.innerHTML = '';
+  DIMS.forEach(d => {
+    const v = res.norm[d.id] || 0;
+    const el = document.createElement('div');
+    el.innerHTML = `
+      <div class="dim-row-head"><span class="dim-name">${d.name}</span><span class="dim-score">${v}分</span></div>
+      <div class="dim-track"><div class="dim-fill" style="width:${v}%"></div></div>
+      <div class="dim-poles"><span>${d.low}</span><span>${d.high}</span></div>`;
+    dimList.appendChild(el);
+  });
+
+  const top3 = document.getElementById('top3List');
+  top3.innerHTML = ['🥇','🥈','🥉'].map((m, i) => {
+    const tp = res.top[i]; if(!tp) return '';
+    return `<div class="top3-row">
+      <span class="top3-medal">${m}</span>
+      <div class="top3-info"><div class="top3-code">${tp.code} ${tp.name}</div><div class="top3-sub">${tp.sub}</div></div>
+      <span class="top3-pct">${tp.pct}%</span>
+    </div>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════
+// 历史记录
+// ══════════════════════════════════════════
+const HKEY = 'mdti_v1_history';
+function saveHistory(res){
+  try{
+    const h = JSON.parse(localStorage.getItem(HKEY)||'[]');
+    h.unshift({code:res.main.code,name:res.main.name,pct:res.matchPct,time:Date.now()});
+    localStorage.setItem(HKEY, JSON.stringify(h.slice(0,20)));
+  }catch(e){}
+}
+function loadHistory(){ try{return JSON.parse(localStorage.getItem(HKEY)||'[]');}catch(e){return[];} }
+function renderHistoryList(){
+  const hist = loadHistory();
+  const el = document.getElementById('histList');
+  if(!hist.length){ el.innerHTML='<p class="hist-empty">还没有记录，去测一下吧~</p>'; return; }
+  const fmt = ts => {
+    const d = new Date(ts);
+    return `${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+  };
+  el.innerHTML = hist.map(h => `
+    <button class="hist-row">
+      <span class="hist-code">${h.code}</span>
+      <span class="hist-name">${h.name} · ${h.pct}%匹配</span>
+      <time class="hist-time">${fmt(h.time)}</time>
+    </button>`).join('');
+}
+
+// ══════════════════════════════════════════
+// 页面切换
+// ══════════════════════════════════════════
+function showPage(id){
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('on'));
+  document.getElementById(id).classList.add('on');
+  window.scrollTo(0,0);
+}
+
+// ══════════════════════════════════════════
+// Canvas 分享图
+// ══════════════════════════════════════════
+function roundRect(ctx,x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y); ctx.lineTo(x+w-r,y); ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+  ctx.lineTo(x+w,y+h-r); ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+  ctx.lineTo(x+r,y+h); ctx.quadraticCurveTo(x,y+h,x,y+h-r);
+  ctx.lineTo(x,y+r); ctx.quadraticCurveTo(x,y,x+r,y);
+  ctx.closePath();
+}
+function wrapText(ctx,text,x,y,maxW,lineH){
+  const chars=Array.from(text); let line='',cy=y;
+  for(const ch of chars){
+    const test=line+ch;
+    if(ctx.measureText(test).width>maxW && line){ ctx.fillText(line,x,cy); line=ch; cy+=lineH; }
+    else line=test;
+  }
+  if(line){ctx.fillText(line,x,cy); cy+=lineH;}
+  return cy;
+}
+function drawRadar(ctx,cx,cy,r,norm){
+  const n=DIMS.length, step=(Math.PI*2)/n, start=-Math.PI/2;
+  [.25,.5,.75,1].forEach(s=>{
+    ctx.beginPath();
+    for(let i=0;i<n;i++){
+      const a=start+i*step, px=cx+Math.cos(a)*r*s, py=cy+Math.sin(a)*r*s;
+      i===0?ctx.moveTo(px,py):ctx.lineTo(px,py);
+    }
+    ctx.closePath(); ctx.strokeStyle='rgba(255,255,255,0.15)'; ctx.lineWidth=1; ctx.stroke();
+  });
+  for(let i=0;i<n;i++){
+    const a=start+i*step;
+    ctx.beginPath(); ctx.moveTo(cx,cy);
+    ctx.lineTo(cx+Math.cos(a)*r,cy+Math.sin(a)*r);
+    ctx.strokeStyle='rgba(255,255,255,0.1)'; ctx.lineWidth=1; ctx.stroke();
+  }
+  ctx.beginPath();
+  for(let i=0;i<n;i++){
+    const a=start+i*step, val=Math.max(.05,(norm[DIMS[i].id]||0)/100);
+    const px=cx+Math.cos(a)*r*val, py=cy+Math.sin(a)*r*val;
+    i===0?ctx.moveTo(px,py):ctx.lineTo(px,py);
+  }
+  ctx.closePath(); ctx.fillStyle='rgba(249,115,22,0.3)'; ctx.fill();
+  ctx.strokeStyle='#f97316'; ctx.lineWidth=2; ctx.stroke();
+  for(let i=0;i<n;i++){
+    const a=start+i*step, val=Math.max(.05,(norm[DIMS[i].id]||0)/100);
+    const px=cx+Math.cos(a)*r*val, py=cy+Math.sin(a)*r*val;
+    ctx.beginPath(); ctx.arc(px,py,4,0,Math.PI*2);
+    ctx.fillStyle='#f97316'; ctx.fill();
+    ctx.strokeStyle='#fff'; ctx.lineWidth=1.5; ctx.stroke();
+  }
+  ctx.font='bold 19px PingFang SC,Microsoft YaHei,sans-serif';
+  ctx.fillStyle='rgba(255,255,255,0.82)'; ctx.textAlign='center'; ctx.textBaseline='middle';
+  for(let i=0;i<n;i++){
+    const a=start+i*step, lr=r+32;
+    ctx.fillText(DIMS[i].name, cx+Math.cos(a)*lr, cy+Math.sin(a)*lr);
+  }
+}
+function generatePoster(res){
+  return new Promise(resolve=>{
+    const DPR=Math.min(window.devicePixelRatio||1,2);
+    const W=750,H=1280;
+    const cv=document.createElement('canvas');
+    cv.width=W*DPR; cv.height=H*DPR;
+    const ctx=cv.getContext('2d');
+    ctx.scale(DPR,DPR);
+    // 背景
+    const bg=ctx.createLinearGradient(0,0,0,H);
+    bg.addColorStop(0,'#1a2744'); bg.addColorStop(.5,'#243352'); bg.addColorStop(1,'#0f172a');
+    ctx.fillStyle=bg; ctx.fillRect(0,0,W,H);
+    const g1=ctx.createRadialGradient(W*.85,H*.05,0,W*.85,H*.05,260);
+    g1.addColorStop(0,'rgba(249,115,22,.18)'); g1.addColorStop(1,'rgba(249,115,22,0)');
+    ctx.fillStyle=g1; ctx.fillRect(0,0,W,H);
+    // 品牌
+    ctx.font='bold 24px PingFang SC,Microsoft YaHei,sans-serif';
+    ctx.fillStyle='rgba(255,255,255,.4)'; ctx.textAlign='left'; ctx.textBaseline='top';
+    ctx.fillText('MDTI 职场人格测试',48,46);
+    ctx.font='20px PingFang SC,Microsoft YaHei,sans-serif';
+    ctx.fillStyle='rgba(255,255,255,.2)';
+    ctx.fillText('ikun-test.pages.woa.com',48,78);
+    // 主区块
+    roundRect(ctx,32,118,W-64,318,18);
+    ctx.fillStyle='rgba(255,255,255,.06)'; ctx.fill();
+    ctx.strokeStyle='rgba(255,255,255,.1)'; ctx.lineWidth=1; ctx.stroke();
+    ctx.font='bold 108px PingFang SC,Microsoft YaHei,sans-serif';
+    ctx.fillStyle='#fff'; ctx.textAlign='left'; ctx.textBaseline='top';
+    ctx.fillText(res.main.code,52,134);
+    ctx.font='bold 40px PingFang SC,Microsoft YaHei,sans-serif';
+    ctx.fillStyle='#f97316'; ctx.fillText(res.main.name,52,258);
+    roundRect(ctx,52,310,190,48,24);
+    ctx.fillStyle='rgba(249,115,22,.22)'; ctx.fill();
+    ctx.strokeStyle='rgba(249,115,22,.45)'; ctx.lineWidth=1.5; ctx.stroke();
+    ctx.font='bold 24px PingFang SC,Microsoft YaHei,sans-serif';
+    ctx.fillStyle='#fed7aa'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(`匹配度 ${res.matchPct}%`,147,334);
+    let sub=res.main.sub;
+    ctx.font='24px PingFang SC,Microsoft YaHei,sans-serif';
+    ctx.textAlign='left'; ctx.textBaseline='top'; ctx.fillStyle='rgba(203,213,225,.85)';
+    if(ctx.measureText(sub).width>W-110) sub=sub.slice(0,22)+'…';
+    ctx.fillText(sub,52,382);
+    // 摘要
+    const descFirst=res.main.desc.split('\n').filter(l=>l.trim())[0]||'';
+    const descTxt=(descFirst.length>60?descFirst.slice(0,60)+'…':descFirst);
+    ctx.font='22px PingFang SC,Microsoft YaHei,sans-serif';
+    ctx.fillStyle='rgba(148,163,184,.85)';
+    wrapText(ctx,descTxt,52,444,W-104,34);
+    // 雷达图
+    const ry=510, rcx=W/2, rcy=ry+148, rr=122;
+    roundRect(ctx,32,ry-8,W-64,334,16);
+    ctx.fillStyle='rgba(255,255,255,.04)'; ctx.fill();
+    ctx.strokeStyle='rgba(255,255,255,.08)'; ctx.lineWidth=1; ctx.stroke();
+    ctx.font='bold 24px PingFang SC,Microsoft YaHei,sans-serif';
+    ctx.fillStyle='rgba(255,255,255,.7)'; ctx.textAlign='left'; ctx.textBaseline='top';
+    ctx.fillText('八维职场评分',52,ry+8);
+    drawRadar(ctx,rcx,rcy,rr,res.norm);
+    // 评分条
+    const barY=ry+350, colW=(W-88)/2;
+    roundRect(ctx,32,barY-8,W-64,278,16);
+    ctx.fillStyle='rgba(255,255,255,.04)'; ctx.fill();
+    ctx.strokeStyle='rgba(255,255,255,.08)'; ctx.lineWidth=1; ctx.stroke();
+    DIMS.forEach((d,i)=>{
+      const col=i%2, row=Math.floor(i/2);
+      const bx=52+col*(colW+20), by=barY+14+row*58;
+      const v=res.norm[d.id]||0, bw=colW-16;
+      ctx.font='19px PingFang SC,Microsoft YaHei,sans-serif';
+      ctx.fillStyle='rgba(203,213,225,.8)'; ctx.textAlign='left'; ctx.textBaseline='top';
+      ctx.fillText(d.name,bx,by);
+      ctx.font='bold 19px PingFang SC,Microsoft YaHei,sans-serif';
+      ctx.fillStyle='#f97316'; ctx.textAlign='right';
+      ctx.fillText(v+'分',bx+bw,by);
+      roundRect(ctx,bx,by+25,bw,9,4);
+      ctx.fillStyle='rgba(255,255,255,.1)'; ctx.fill();
+      const fw=Math.max(9,bw*(v/100));
+      roundRect(ctx,bx,by+25,fw,9,4);
+      const bg2=ctx.createLinearGradient(bx,0,bx+fw,0);
+      bg2.addColorStop(0,'#f97316'); bg2.addColorStop(1,'#ea580c');
+      ctx.fillStyle=bg2; ctx.fill();
+    });
+    // Top3
+    const t3y=barY+300;
+    roundRect(ctx,32,t3y,W-64,174,16);
+    ctx.fillStyle='rgba(255,255,255,.04)'; ctx.fill();
+    ctx.strokeStyle='rgba(255,255,255,.08)'; ctx.lineWidth=1; ctx.stroke();
+    ctx.font='bold 24px PingFang SC,Microsoft YaHei,sans-serif';
+    ctx.fillStyle='rgba(255,255,255,.7)'; ctx.textAlign='left'; ctx.textBaseline='top';
+    ctx.fillText('候选人格 Top 3',52,t3y+14);
+    ['🥇','🥈','🥉'].forEach((m,i)=>{
+      const tp=res.top[i]; if(!tp)return;
+      const iy=t3y+52+i*38;
+      ctx.font='21px sans-serif'; ctx.textAlign='left'; ctx.fillStyle='#fff'; ctx.fillText(m,52,iy);
+      ctx.font='bold 21px PingFang SC,Microsoft YaHei,sans-serif'; ctx.fillText(`${tp.code} ${tp.name}`,86,iy);
+      ctx.font='21px PingFang SC,Microsoft YaHei,sans-serif'; ctx.fillStyle='#f97316'; ctx.textAlign='right';
+      ctx.fillText(`${tp.pct}%`,W-52,iy);
+    });
+    // 二维码+底部
+    const qrY=t3y+194;
+    try{
+      const qr=qrcode(0,'M');
+      qr.addData(location.origin+location.pathname+'?r='+res.main.code+'&p='+res.matchPct);
+      qr.make();
+      const cs=4, qs=qr.getModuleCount()*cs;
+      const qx=W-52-qs;
+      roundRect(ctx,qx-10,qrY-10,qs+20,qs+20,10);
+      ctx.fillStyle='#fff'; ctx.fill();
+      for(let r=0;r<qr.getModuleCount();r++){
+        for(let c=0;c<qr.getModuleCount();c++){
+          if(qr.isDark(r,c)){ctx.fillStyle='#1a2744'; ctx.fillRect(qx+c*cs,qrY+r*cs,cs,cs);}
+        }
+      }
+      ctx.font='19px PingFang SC,Microsoft YaHei,sans-serif';
+      ctx.fillStyle='rgba(203,213,225,.7)'; ctx.textAlign='left'; ctx.textBaseline='top';
+      ctx.fillText('扫码测你的职场人格',52,qrY+8);
+      ctx.fillText('ikun-test.pages.woa.com',52,qrY+36);
+    }catch(e){
+      ctx.font='19px PingFang SC,Microsoft YaHei,sans-serif';
+      ctx.fillStyle='rgba(203,213,225,.7)'; ctx.textAlign='left'; ctx.textBaseline='top';
+      ctx.fillText('ikun-test.pages.woa.com',52,qrY+8);
+    }
+    ctx.font='17px PingFang SC,Microsoft YaHei,sans-serif';
+    ctx.fillStyle='rgba(100,116,139,.7)'; ctx.textAlign='center'; ctx.textBaseline='bottom';
+    ctx.fillText('MDTI 职场人格测试 · 娱乐向 · 非心理学诊断',W/2,H-18);
+    resolve(cv.toDataURL('image/png'));
+  });
+}
+
+// ══════════════════════════════════════════
+// 事件绑定
+// ══════════════════════════════════════════
+
+// 首页
+document.getElementById('btnStart').addEventListener('click',()=>{
+  document.getElementById('modalDisc').hidden=false;
+});
+document.getElementById('btnHistory').addEventListener('click',()=>{
+  renderHistoryList(); document.getElementById('modalHist').hidden=false;
+});
+
+// 免责弹窗
+document.getElementById('discOk').addEventListener('click',()=>{
+  document.getElementById('modalDisc').hidden=true;
+  Object.keys(answers).forEach(k=>delete answers[k]);
+  buildTestPages(); curPage=0; goPage(0);
+  showPage('pg-test');
+});
+['discNo','discClose','discBg'].forEach(id=>{
+  document.getElementById(id).addEventListener('click',()=>{ document.getElementById('modalDisc').hidden=true; });
+});
+
+// 进度栏返回按钮
+document.getElementById('btnProgBack').addEventListener('click',()=>{
+  if(curPage > 0) goPage(curPage - 1);
+  else { if(confirm('退出会丢失进度，确定吗？')) showPage('pg-home'); }
+});
+
+// 下一页/提交
+document.getElementById('btnNext').addEventListener('click',()=>{
+  if(curPage < TOTAL_PAGES - 1){
+    goPage(curPage + 1);
+  } else {
+    const res = computeResult();
+    lastResult = res;
+    renderResult(res);
+    saveHistory(res);
+    showPage('pg-result');
+  }
+});
+
+// 结果页
+document.getElementById('btnRestart').addEventListener('click',()=>{
+  Object.keys(answers).forEach(k=>delete answers[k]);
+  buildTestPages(); curPage=0; goPage(0);
+  showPage('pg-test');
+});
+document.getElementById('btnCopy').addEventListener('click',()=>{
+  if(!lastResult) return;
+  const url=new URL(location.href);
+  url.searchParams.set('r',lastResult.main.code); url.searchParams.set('p',lastResult.matchPct);
+  const text=`我的 MDTI 职场人格是【${lastResult.main.code} ${lastResult.main.name}】，匹配度 ${lastResult.matchPct}%！\n"${lastResult.main.sub}"\n\n👉 来测测你是哪种打工人：${url.toString()}`;
+  if(navigator.clipboard){
+    navigator.clipboard.writeText(text).then(()=>{
+      const btn=document.getElementById('btnCopy'); const o=btn.textContent;
+      btn.textContent='✅ 已复制！'; setTimeout(()=>btn.textContent=o,2000);
+    });
+  } else prompt('复制分享文字：',text);
+});
+document.getElementById('btnPoster').addEventListener('click',async()=>{
+  if(!lastResult) return;
+  const modal=document.getElementById('modalPoster');
+  const img=document.getElementById('posterImg');
+  const loading=document.getElementById('posterLoading');
+  img.style.display='none'; loading.style.display='block';
+  modal.hidden=false;
+  if(!window.qrcode){
+    await new Promise(resolve=>{
+      const s=document.createElement('script');
+      s.src='https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js';
+      s.onload=resolve; s.onerror=resolve;
+      document.head.appendChild(s);
+    });
+  }
+  try{
+    const dataUrl=await generatePoster(lastResult);
+    img.src=dataUrl; img.style.display='block'; loading.style.display='none';
+    if(navigator.share && navigator.canShare) document.getElementById('btnPosterShare').hidden=false;
+  } catch(e){ loading.textContent='生成失败，请重试。'; }
+});
+document.getElementById('btnPosterSave').addEventListener('click',()=>{
+  const img=document.getElementById('posterImg');
+  if(!img.src||img.style.display==='none') return;
+  const a=document.createElement('a'); a.href=img.src;
+  a.download=`MDTI-${lastResult?.main?.code||'result'}.png`; a.click();
+});
+document.getElementById('btnPosterShare').addEventListener('click',async()=>{
+  const img=document.getElementById('posterImg');
+  if(!img.src) return;
+  try{
+    const blob=await(await fetch(img.src)).blob();
+    const file=new File([blob],`MDTI-${lastResult?.main?.code}.png`,{type:'image/png'});
+    await navigator.share({files:[file],title:`我是 ${lastResult?.main?.code} ${lastResult?.main?.name}`,text:lastResult?.main?.sub});
+  }catch(e){}
+});
+['posterClose','posterBg','btnPosterClose'].forEach(id=>{
+  document.getElementById(id).addEventListener('click',()=>{ document.getElementById('modalPoster').hidden=true; });
+});
+
+// 历史记录
+['histClose','histBg'].forEach(id=>{
+  document.getElementById(id).addEventListener('click',()=>{ document.getElementById('modalHist').hidden=true; });
+});
+document.getElementById('btnClearHist').addEventListener('click',()=>{
+  if(confirm('确定清空全部历史记录？')){ localStorage.removeItem(HKEY); renderHistoryList(); }
+});
+
+// 分享链接直跳结果
+(()=>{
+  const p=new URLSearchParams(location.search), r=p.get('r');
+  if(r){
+    const t=TYPES.find(x=>x.code===r);
+    if(t){
+      const pct=parseInt(p.get('p'))||75;
+      lastResult={
+        main:t, matchPct:pct,
+        norm:Object.fromEntries(DIMS.map(d=>[d.id,(t.profile[d.id]||2)/3*100])),
+        top:TYPES.slice(0,3).map((x,i)=>({...x,pct:i===0?pct:Math.max(18,pct-13-i*9)}))
+      };
+      renderResult(lastResult); showPage('pg-result');
+    }
+  }
+})();
+
+// 初始化题目DOM（预建，首页不显示）
+buildTestPages();
+</script>
+</body>
+</html>
