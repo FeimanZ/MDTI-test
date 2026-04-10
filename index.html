@@ -397,7 +397,7 @@ button:disabled{opacity:.4;pointer-events:none;}
       <h2>分享图</h2>
       <button class="modal-close" id="posterClose">×</button>
     </div>
-    <p style="font-size:12px;color:var(--muted);margin-bottom:6px;">长按图片可保存到相册</p>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:6px;">📱 手机端：长按图片保存到相册；桌面端：点「保存」下载</p>
     <div class="poster-scroll">
       <div class="poster-loading" id="posterLoading">生成中…</div>
       <img id="posterImg" alt="分享图" style="display:none;"/>
@@ -1170,8 +1170,19 @@ document.getElementById('btnPoster').addEventListener('click',async()=>{
   const modal=document.getElementById('modalPoster');
   const img=document.getElementById('posterImg');
   const loading=document.getElementById('posterLoading');
-  img.style.display='none'; loading.style.display='block';
+  const saveBtn=document.getElementById('btnPosterSave');
+  const shareBtn=document.getElementById('btnPosterShare');
+
+  // 重置状态
+  img.style.display='none';
+  img.src='';
+  loading.style.display='block';
+  loading.textContent='生成中…';
+  saveBtn.disabled=true;
+  shareBtn.hidden=true;
   modal.hidden=false;
+
+  // 加载二维码库
   if(!window.qrcode){
     await new Promise(resolve=>{
       const s=document.createElement('script');
@@ -1180,27 +1191,92 @@ document.getElementById('btnPoster').addEventListener('click',async()=>{
       document.head.appendChild(s);
     });
   }
+
   try{
     const dataUrl=await generatePoster(lastResult);
-    img.src=dataUrl; img.style.display='block'; loading.style.display='none';
-    if(navigator.share && navigator.canShare) document.getElementById('btnPosterShare').hidden=false;
-  } catch(e){ loading.textContent='生成失败，请重试。'; }
+    img.src=dataUrl;
+    img.style.display='block';
+    loading.style.display='none';
+    saveBtn.disabled=false;
+
+    // 判断是否支持文件分享（Web Share API Level 2）
+    // 用 dataURL 转 Blob 直接测试，不依赖 canShare
+    try{
+      const blob=dataUrlToBlob(dataUrl);
+      const file=new File([blob],`MDTI-${lastResult.main.code}.png`,{type:'image/png'});
+      if(navigator.share && navigator.canShare && navigator.canShare({files:[file]})){
+        shareBtn.hidden=false;
+        shareBtn._blob=blob; // 缓存，避免重复转换
+      }
+    }catch(_){}
+  }catch(e){
+    loading.textContent='生成失败，请刷新重试。';
+    console.error('generatePoster error', e);
+  }
 });
+
+// dataURL → Blob（不走 fetch，兼容性更好）
+function dataUrlToBlob(dataUrl){
+  const arr=dataUrl.split(',');
+  const mime=arr[0].match(/:(.*?);/)[1];
+  const bstr=atob(arr[1]);
+  const u8=new Uint8Array(bstr.length);
+  for(let i=0;i<bstr.length;i++) u8[i]=bstr.charCodeAt(i);
+  return new Blob([u8],{type:mime});
+}
+
 document.getElementById('btnPosterSave').addEventListener('click',()=>{
   const img=document.getElementById('posterImg');
-  if(!img.src||img.style.display==='none') return;
-  const a=document.createElement('a'); a.href=img.src;
-  a.download=`MDTI-${lastResult?.main?.code||'result'}.png`; a.click();
+  if(!img.src || img.style.display==='none') return;
+
+  const filename=`MDTI-${lastResult?.main?.code||'result'}.png`;
+
+  // 方案1：下载链接（桌面端有效）
+  try{
+    const a=document.createElement('a');
+    a.href=img.src;
+    a.download=filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }catch(e){}
+
+  // 方案2：移动端兜底提示（iOS Safari / 微信内置浏览器不支持 download 属性）
+  // 判断是否移动端且不支持 download
+  const isMobile=/iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  const isWechat=/MicroMessenger/i.test(navigator.userAgent);
+  if(isMobile || isWechat){
+    // 短暂提示
+    const btn=document.getElementById('btnPosterSave');
+    const orig=btn.textContent;
+    btn.textContent='📱 长按图片可保存';
+    setTimeout(()=>btn.textContent=orig, 3000);
+  }
 });
+
 document.getElementById('btnPosterShare').addEventListener('click',async()=>{
   const img=document.getElementById('posterImg');
   if(!img.src) return;
+  const shareBtn=document.getElementById('btnPosterShare');
+  const orig=shareBtn.textContent;
+  shareBtn.textContent='分享中…';
   try{
-    const blob=await(await fetch(img.src)).blob();
-    const file=new File([blob],`MDTI-${lastResult?.main?.code}.png`,{type:'image/png'});
-    await navigator.share({files:[file],title:`我是 ${lastResult?.main?.code} ${lastResult?.main?.name}`,text:lastResult?.main?.sub});
-  }catch(e){}
+    // 优先用缓存的 blob
+    const blob=shareBtn._blob || dataUrlToBlob(img.src);
+    const file=new File([blob],`MDTI-${lastResult?.main?.code||'result'}.png`,{type:'image/png'});
+    await navigator.share({
+      files:[file],
+      title:`我是 ${lastResult?.main?.code} ${lastResult?.main?.name}`,
+      text:`${lastResult?.main?.sub}\n\n👉 来测测你是哪种打工人：https://mdti.pages.dev`
+    });
+  }catch(e){
+    // 用户取消或分享失败，不报错
+    if(e.name!=='AbortError') console.warn('share failed',e);
+  }finally{
+    shareBtn.textContent=orig;
+  }
 });
+
 ['posterClose','posterBg','btnPosterClose'].forEach(id=>{
   document.getElementById(id).addEventListener('click',()=>{ document.getElementById('modalPoster').hidden=true; });
 });
