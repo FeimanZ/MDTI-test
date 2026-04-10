@@ -281,6 +281,31 @@ button:disabled{opacity:.4;pointer-events:none;}
 .pbtn-share{background:var(--panel);color:var(--accent2);border:1.5px solid var(--accent);}
 .pbtn-close{background:var(--soft);color:var(--muted);border:1px solid var(--line);}
 
+/* 微信专用长按保存全屏遮罩 */
+.wx-save-overlay{
+  position:fixed;inset:0;z-index:1000;
+  background:rgba(0,0,0,.92);
+  display:flex;flex-direction:column;align-items:center;justify-content:flex-start;
+  overflow-y:auto;-webkit-overflow-scrolling:touch;
+  padding:env(safe-area-inset-top,20px) 16px calc(env(safe-area-inset-bottom,0px)+20px);
+}
+.wx-save-overlay[hidden]{display:none!important;}
+.wx-save-tip{
+  display:flex;align-items:center;gap:8px;
+  background:rgba(249,115,22,.95);border-radius:14px;
+  padding:14px 20px;margin-bottom:16px;width:100%;max-width:420px;
+}
+.wx-save-tip-icon{font-size:24px;flex-shrink:0;}
+.wx-save-tip-text{font-size:15px;font-weight:700;color:#fff;line-height:1.5;}
+.wx-save-img-wrap{width:100%;max-width:420px;border-radius:14px;overflow:hidden;
+  box-shadow:0 8px 32px rgba(0,0,0,.4);}
+.wx-save-img-wrap img{width:100%;display:block;}
+.wx-save-close{
+  margin-top:20px;padding:14px 40px;border-radius:14px;
+  background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);
+  color:#fff;font-size:15px;font-weight:700;
+}
+
 /* 历史记录 */
 .hist-list{display:grid;gap:8px;}
 .hist-row{
@@ -429,6 +454,18 @@ button:disabled{opacity:.4;pointer-events:none;}
       <button class="pbtn-close btn-a" id="btnPosterClose">关闭</button>
     </div>
   </div>
+</div>
+
+<!-- ══ 微信专用长按保存遮罩 ══ -->
+<div class="wx-save-overlay" id="wxSaveOverlay" hidden>
+  <div class="wx-save-tip">
+    <span class="wx-save-tip-icon">👆</span>
+    <div class="wx-save-tip-text">长按下方图片<br>选择「保存图片」即可存到相册</div>
+  </div>
+  <div class="wx-save-img-wrap">
+    <img id="wxSaveImg" alt="MDTI 分享图"/>
+  </div>
+  <button class="wx-save-close" id="wxSaveClose">关闭</button>
 </div>
 
 <script>
@@ -1188,20 +1225,6 @@ document.getElementById('btnCopy').addEventListener('click',()=>{
 });
 document.getElementById('btnPoster').addEventListener('click',async()=>{
   if(!lastResult) return;
-  const modal=document.getElementById('modalPoster');
-  const img=document.getElementById('posterImg');
-  const loading=document.getElementById('posterLoading');
-  const saveBtn=document.getElementById('btnPosterSave');
-  const shareBtn=document.getElementById('btnPosterShare');
-
-  // 重置状态
-  img.style.display='none';
-  img.src='';
-  loading.style.display='block';
-  loading.textContent='生成中…';
-  saveBtn.disabled=true;
-  shareBtn.hidden=true;
-  modal.hidden=false;
 
   // 加载二维码库
   if(!window.qrcode){
@@ -1213,6 +1236,40 @@ document.getElementById('btnPoster').addEventListener('click',async()=>{
     });
   }
 
+  // 微信环境：直接弹全屏遮罩，让用户长按保存
+  if(ENV.isWechat){
+    const btn = document.getElementById('btnPoster');
+    const orig = btn.textContent;
+    btn.textContent = '生成中…';
+    btn.disabled = true;
+    try{
+      const dataUrl = await generatePoster(lastResult);
+      showWxSaveOverlay(dataUrl);
+    }catch(e){
+      alert('生成失败，请重试');
+      console.error('generatePoster error', e);
+    }finally{
+      btn.textContent = orig;
+      btn.disabled = false;
+    }
+    return; // 微信环境不走下面的弹窗逻辑
+  }
+
+  // 非微信环境：用弹窗展示
+  const modal=document.getElementById('modalPoster');
+  const img=document.getElementById('posterImg');
+  const loading=document.getElementById('posterLoading');
+  const saveBtn=document.getElementById('btnPosterSave');
+  const shareBtn=document.getElementById('btnPosterShare');
+
+  img.style.display='none';
+  img.src='';
+  loading.style.display='block';
+  loading.textContent='生成中…';
+  saveBtn.disabled=true;
+  shareBtn.hidden=true;
+  modal.hidden=false;
+
   try{
     const dataUrl=await generatePoster(lastResult);
     img.src=dataUrl;
@@ -1220,14 +1277,13 @@ document.getElementById('btnPoster').addEventListener('click',async()=>{
     loading.style.display='none';
     saveBtn.disabled=false;
 
-    // 判断是否支持文件分享（Web Share API Level 2）
-    // 用 dataURL 转 Blob 直接测试，不依赖 canShare
+    // 检测是否支持文件分享
     try{
       const blob=dataUrlToBlob(dataUrl);
       const file=new File([blob],`MDTI-${lastResult.main.code}.png`,{type:'image/png'});
       if(navigator.share && navigator.canShare && navigator.canShare({files:[file]})){
         shareBtn.hidden=false;
-        shareBtn._blob=blob; // 缓存，避免重复转换
+        shareBtn._blob=blob;
       }
     }catch(_){}
   }catch(e){
@@ -1235,6 +1291,16 @@ document.getElementById('btnPoster').addEventListener('click',async()=>{
     console.error('generatePoster error', e);
   }
 });
+
+// ══════════════════════════════════════════
+// 环境检测
+// ══════════════════════════════════════════
+const ENV = {
+  isWechat: /MicroMessenger/i.test(navigator.userAgent),
+  isIOS: /iPhone|iPad|iPod/i.test(navigator.userAgent),
+  isAndroid: /Android/i.test(navigator.userAgent),
+  isMobile: /iPhone|iPad|iPod|Android/i.test(navigator.userAgent),
+};
 
 // dataURL → Blob（不走 fetch，兼容性更好）
 function dataUrlToBlob(dataUrl){
@@ -1246,13 +1312,44 @@ function dataUrlToBlob(dataUrl){
   return new Blob([u8],{type:mime});
 }
 
+// ══════════════════════════════════════════
+// 微信专用长按保存遮罩
+// ══════════════════════════════════════════
+function showWxSaveOverlay(dataUrl){
+  const overlay = document.getElementById('wxSaveOverlay');
+  const img = document.getElementById('wxSaveImg');
+  img.src = dataUrl;
+  overlay.hidden = false;
+  document.body.style.overflow = 'hidden';
+}
+document.getElementById('wxSaveClose').addEventListener('click', ()=>{
+  document.getElementById('wxSaveOverlay').hidden = true;
+  document.body.style.overflow = '';
+});
+
 document.getElementById('btnPosterSave').addEventListener('click',()=>{
   const img=document.getElementById('posterImg');
   if(!img.src || img.style.display==='none') return;
 
+  // 微信环境：关闭弹窗，打开长按遮罩
+  if(ENV.isWechat){
+    document.getElementById('modalPoster').hidden=true;
+    showWxSaveOverlay(img.src);
+    return;
+  }
+
   const filename=`MDTI-${lastResult?.main?.code||'result'}.png`;
 
-  // 方案1：下载链接（桌面端有效）
+  // iOS Safari：不支持 download，用长按提示兜底
+  if(ENV.isIOS){
+    const btn=document.getElementById('btnPosterSave');
+    const orig=btn.textContent;
+    btn.textContent='👆 长按图片可保存';
+    setTimeout(()=>btn.textContent=orig, 3000);
+    return;
+  }
+
+  // 桌面端 / 安卓 Chrome：下载链接
   try{
     const a=document.createElement('a');
     a.href=img.src;
@@ -1260,17 +1357,10 @@ document.getElementById('btnPosterSave').addEventListener('click',()=>{
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
-  }catch(e){}
-
-  // 方案2：移动端兜底提示（iOS Safari / 微信内置浏览器不支持 download 属性）
-  // 判断是否移动端且不支持 download
-  const isMobile=/iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-  const isWechat=/MicroMessenger/i.test(navigator.userAgent);
-  if(isMobile || isWechat){
-    // 短暂提示
+  }catch(e){
     const btn=document.getElementById('btnPosterSave');
     const orig=btn.textContent;
-    btn.textContent='📱 长按图片可保存';
+    btn.textContent='👆 长按图片可保存';
     setTimeout(()=>btn.textContent=orig, 3000);
   }
 });
