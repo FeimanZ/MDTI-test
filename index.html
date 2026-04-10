@@ -485,7 +485,7 @@ button:disabled{opacity:.4;pointer-events:none;}
 <!-- ══ 微信专用长按保存遮罩 ══ -->
 <div class="wx-save-overlay" id="wxSaveOverlay" hidden>
   <div class="wx-save-tip">
-    <span class="wx-save-tip-icon">👆</span>
+    <span class="wx-save-tip-icon">☝️</span>
     <div class="wx-save-tip-text">长按下方图片<br>选择「保存图片」即可存到相册</div>
   </div>
   <div class="wx-save-img-wrap">
@@ -1370,7 +1370,7 @@ document.getElementById('btnPosterSave').addEventListener('click',()=>{
   if(ENV.isIOS){
     const btn=document.getElementById('btnPosterSave');
     const orig=btn.textContent;
-    btn.textContent='👆 长按图片可保存';
+    btn.textContent='☝️ 长按图片可保存';
     setTimeout(()=>btn.textContent=orig, 3000);
     return;
   }
@@ -1386,7 +1386,7 @@ document.getElementById('btnPosterSave').addEventListener('click',()=>{
   }catch(e){
     const btn=document.getElementById('btnPosterSave');
     const orig=btn.textContent;
-    btn.textContent='👆 长按图片可保存';
+    btn.textContent='☝️ 长按图片可保存';
     setTimeout(()=>btn.textContent=orig, 3000);
   }
 });
