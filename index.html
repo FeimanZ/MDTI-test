@@ -974,7 +974,7 @@ function renderResult(res){
   });
 
   const top3 = document.getElementById('top3List');
-  top3.innerHTML = ['🥇','🥈','🥉'].map((m, i) => {
+  if(top3) top3.innerHTML = ['🥇','🥈','🥉'].map((m, i) => {
     const tp = res.top[i]; if(!tp) return '';
     return `<div class="top3-row">
       <span class="top3-medal">${m}</span>
